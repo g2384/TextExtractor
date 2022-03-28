@@ -1,0 +1,288 @@
+﻿<html>
+
+<head>
+  <style>
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px;
+      background: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    p {
+      margin: 0px;
+      line-height: 1em;
+    }
+
+    .file {
+      display: block;
+      border-top: 1px solid #333;
+      background: #fff;
+      padding: 5px;
+      margin-top: 10px;
+    }
+
+    .file-content {
+      display: block;
+      border: 1px solid #333;
+      padding: 5px;
+    }
+
+    dt {
+      float: left;
+      margin: 0;
+      line-height: 32px;
+      width: 230px;
+    }
+
+    fieldset {
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      min-width: 0;
+      border-color: #333;
+      border-bottom: 1px solid #333;
+    }
+
+    dt label {
+      position: static;
+    }
+
+    dd input {
+      width: 440px;
+      max-width: 100%;
+      margin-right: 5px;
+      padding: 5px 12px;
+      font-size: 14px;
+      line-height: 20px;
+      vertical-align: middle;
+      border: 1px solid #333;
+      border-radius: 6px;
+      outline: none;
+      box-shadow: var(#666);
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <fieldset>
+      <h3>Filters:</h3>
+      <dl>
+        <dt><label for="search_includes">Content Includes:</label></dt>
+        <dd><input id="search_includes" type="text" onchange="filter()" placeholder="must contain"><span> AND</span></dd>
+      </dl>
+      <dl>
+        <dt><label for="search_excludes">Content Excludes:</label></dt>
+        <dd><input id="search_excludes" type="text" onchange="filter()" placeholder="must not contain"><span> AND</span></dd>
+      </dl>
+      <dl>
+        <dt><label for="search_extension">Extensions:</label></dt>
+        <dd><input id="search_extension" type="text" onchange="filter()" placeholder="pdf docx"><span> OR</span></dd>
+      </dl>
+      <dl>
+        <dt><label for="search_fileNameIncludes">File Name Includes:</label></dt>
+        <dd><input id="search_fileNameIncludes" type="text" onchange="filter()" placeholder="must contain"><span> AND</span></dd>
+      </dl>
+      <dl>
+        <dt><label for="search_fileNameExcludes">File Name Excludes:</label></dt>
+        <dd><input id="search_fileNameExcludes" type="text" onchange="filter()" placeholder="must not contain"><span> AND</span></dd>
+      </dl>
+    </fieldset>
+  </div>
+  <div id="result"></div>
+  <script>
+    const allData = $data$
+    const search_includes = document.querySelector("#search_includes");
+    const search_excludes = document.querySelector("#search_excludes");
+    const search_extension = document.querySelector("#search_extension");
+    const search_fileNameIncludes = document.querySelector("#search_fileNameIncludes");
+    const search_fileNameExcludes = document.querySelector("#search_fileNameExcludes");
+    const resultDiv = document.querySelector("#result");
+    function filter() {
+      resultDiv.innerHTML = "";
+      var inc = search_includes.value;
+      var exc = search_excludes.value;
+      var ext = search_extension.value;
+      var fin = search_fileNameIncludes.value;
+      var fex = search_fileNameExcludes.value;
+      console.log(inc, exc, ext, fin, fex);
+      var filtered = allToLower();
+      var filteredIndex = filtered.map((element, index) => index);
+      var inca = getKeyWords(inc);
+      var exca = getKeyWords(exc);
+      var exta = getKeyWords(ext);
+      var fina = getKeyWords(fin);
+      var fexa = getKeyWords(fex);
+      console.log(inca);
+      if (inca.length > 0) {
+        filteredIndex = filterParaInc(inca, filtered, filteredIndex, contentIncCheck);
+      }
+      if (exca.length > 0) {
+        filteredIndex = filterParaInc(exca, filtered, filteredIndex, contentExcCheck);
+      }
+      if (exta.length > 0) {
+        filteredIndex = filterExtension(exta, filtered, filteredIndex, extensionCheck, ".");
+      }
+      if (fina.length > 0) {
+        filteredIndex = filterExtension(fina, filtered, filteredIndex, fileNameCheck);
+      }
+      if (fexa.length > 0) {
+        filteredIndex = filterExtension(fexa, filtered, filteredIndex, fileNameNotCheck);
+      }
+
+      console.log(filteredIndex);
+      var found = false;
+      if (filteredIndex.length > 0) {
+        found = true;
+        for (var i = 0; i < filteredIndex.length; i++) {
+          var fi = filteredIndex[i];
+          var di = allData[fi];
+          var div = document.createElement("div");
+          div.classList = "file";
+          div.innerHTML = "<h4>" + di.FileName + "<h4>" +
+            "<div>path: <a href='file:///" + di.Directory +
+            "' target='_blank'>" + di.Directory + "</a></div>" +
+            "<div>Last Modified: " + di.ModifiedTime + "</div>";
+          var divContent = document.createElement("div");
+          divContent.classList = "file-content";
+          divContent.innerHTML = di.Paragraphs.map(e => "<p>" + e + "</p>").join("");
+          div.appendChild(divContent);
+          resultDiv.appendChild(div);
+        }
+      }
+      if (!found) {
+        resultDiv.innerHTML = "No Result";
+      }
+    }
+
+    function fileNameNotCheck(fi, inca) {
+      var e = fi.FileName;
+      var count = 0;
+      for (var j = 0; j < inca.length; j++) {
+        if (e.indexOf(inca[j]) >= 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function fileNameCheck(fi, inca) {
+      var e = fi.FileName;
+      var count = 0;
+      console.log(e, inca)
+      for (var j = 0; j < inca.length; j++) {
+        if (e.indexOf(inca[j]) >= 0) {
+          count++;
+        }
+      }
+      console.log(count)
+      return count == inca.length;
+    }
+
+    function extensionCheck(fi, inca) {
+      var e = fi.Extension;
+      for (var j = 0; j < inca.length; j++) {
+        if (e == inca[j]) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function filterExtension(inca, filtered, filteredIndex, func, prefix = "") {
+      console.log("check extension", inca);
+      var filtered2 = [];
+      for (var j = 0; j < inca.length; j++) {
+        if (inca[j][0] != prefix) {
+          inca[j] = prefix + inca[j];
+        }
+      }
+      for (var i = 0; i < filteredIndex.length; i++) {
+        var i2 = filteredIndex[i];
+        var fi = filtered[i2];
+        var add = func(fi, inca);
+        if (add) {
+          filtered2.push(i2);
+        }
+      }
+      return filtered2;
+    }
+
+    function contentExcCheck(inca, fi) {
+      var para = fi.Paragraphs;
+      var count = 0;
+      for (var j = 0; j < inca.length; j++) {
+        var c = inca[j];
+        for (var k = 0; k < para.length; k++) {
+          var p = para[k];
+          if (p.indexOf(c) >= 0) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function contentIncCheck(inca, fi) {
+      var para = fi.Paragraphs;
+      var count = 0;
+      for (var j = 0; j < inca.length; j++) {
+        var c = inca[j];
+        for (var k = 0; k < para.length; k++) {
+          var p = para[k];
+          if (p.indexOf(c) >= 0) {
+            count++;
+            break;
+          }
+        }
+      }
+      return count == inca.length;
+    }
+
+    function filterParaInc(inca, filtered, filteredIndex, func) {
+      var filtered2 = [];
+      for (var i = 0; i < filteredIndex.length; i++) {
+        var i2 = filteredIndex[i];
+        var fi = filtered[i2];
+        console.log(fi.FileName);
+        var add = func(inca, fi);
+        if (add) {
+          filtered2.push(i2);
+        }
+      }
+      console.log(filtered2);
+      return filtered2;
+    }
+
+    function allToLower() {
+      var filtered2 = [];
+      for (var i = 0; i < allData.length; i++) {
+        var fi = allData[i];
+        var f = {}
+        var keys = Object.keys(fi);
+        keys.forEach(key => {
+          if (key == "Paragraphs") {
+            f[key] = fi[key].map(e => e.toLocaleLowerCase());
+          }
+          else {
+            f[key] = fi[key].toLocaleLowerCase();
+          }
+        });
+        filtered2.push(f);
+      }
+      return filtered2;
+    }
+
+    function getKeyWords(text) {
+      if (text != undefined && text != null && text.length > 0) {
+        text = text.replace(/\s+/g, " ");
+        text = text.trim();
+        return text.split(" ").map(e => e.toLocaleLowerCase());
+      }
+      return [];
+    }
+  </script>
+</body>
+
+</html>
