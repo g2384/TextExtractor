@@ -1,8 +1,10 @@
-﻿using Serilog;
+﻿using System.Text;
+using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Toxy;
 
 namespace TextExtractor
@@ -25,8 +27,8 @@ namespace TextExtractor
             var allFiles = FileHelper.GetAllFiles(path, "*.*").ToArray();
             var outputPath = DateTime.Now.ToString("yyyyMMddHHmmss") + "_output.html";
             var html = File.ReadAllText("output.html");
-            File.WriteAllText(outputPath, $"");
             var dataList = new List<Data>();
+            var registeredCoding = false;
             foreach (var file in allFiles)
             {
                 var fi = new FileInfo(file);
@@ -44,6 +46,18 @@ namespace TextExtractor
                     case ".xlsx":
                     case ".xls":
                         paragraphs = GetParagraphsExcel(file);
+                        break;
+                    case ".pptx":
+                    case ".ppt":
+                        paragraphs = GetParagraphsSlides(file);
+                        break;
+                    case ".msg":
+                        if (!registeredCoding)
+                        {
+                            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                            registeredCoding = true;
+                        }
+                        paragraphs = GetParagraphsMsg(file);
                         break;
                     default:
                         Log.Error($"{ext} is not supported.");
@@ -68,6 +82,35 @@ namespace TextExtractor
             });
             html = html.Replace("$data$", json);
             File.WriteAllText(outputPath, html);
+        }
+
+        private static Regex lineFeedRegex = new Regex("[\r\n]+", RegexOptions.Compiled);
+
+        private static string[] GetParagraphsMsg(string file)
+        {
+            var context = new ParserContext(file);
+            var parser = ParserFactory.CreateEmail(context);
+            var result = parser.Parse();
+            var l1 = nameof(result.ArrivalTime) + ": " + result.ArrivalTime?.ToString("yyy-MM-dd HH:mm:ss");
+            var l2 = nameof(result.Attachments) + ": " + string.Join(", ", result.Attachments);
+            var l3 = nameof(result.Bcc) + ": " + string.Join(", ", result.Bcc);
+            var l4 = nameof(result.Cc) + ": " + string.Join(", ", result.Cc);
+            var l5 = nameof(result.From) + ": " + result.From;
+            var l6 = nameof(result.To) + ": " + string.Join(", ", result.To);
+            var l7 = nameof(result.Subject) + ": " + result.Subject;
+            var text = lineFeedRegex.Split(result.TextBody);
+            text = text.Select(e => e.Trim()).Where(e => !string.IsNullOrWhiteSpace(e)).ToArray();
+            return new[] { l1, l2, l3, l4, l5, l6, l7 }.Concat(text).ToArray();
+        }
+
+        private static string[] GetParagraphsSlides(string file)
+        {
+            var context = new ParserContext(file);
+            var parser = ParserFactory.CreateSlideshow(context);
+            var result = parser.Parse();
+            var text = result.Slides.SelectMany(e => e.Texts).Select(e => e.Trim());
+            var paragraphs = text.Where(e => !string.IsNullOrWhiteSpace(e)).ToArray();
+            return paragraphs;
         }
 
         private static string[] GetParagraphsExcel(string file)
