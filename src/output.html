@@ -178,7 +178,7 @@
           var di = allData[fi];
           var div = document.createElement("div");
           div.classList = "file";
-          div.innerHTML = "<h4>" + di.FileName + "</h4>" +
+          div.innerHTML = "<h4>" + di.FileName + di.Extension + "</h4>" +
             "<div>path: <a href='file:///" + di.Directory +
             "' target='_blank'>" + di.Directory + "</a></div>" +
             "<div>Last Modified: " + di.ModifiedTime + "</div>";
