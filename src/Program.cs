@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Drawing;
+using System.Text;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Text.Encodings.Web;
@@ -25,10 +26,12 @@ namespace TextExtractor
             }
             var path = paths[0];
             var allFiles = FileHelper.GetAllFiles(path, "*.*").ToArray();
+            Log.Information($"Found {allFiles.Length} files.");
             var outputPath = DateTime.Now.ToString("yyyyMMddHHmmss") + "_output.html";
             var html = File.ReadAllText("output.html");
             var dataList = new List<Data>();
             var registeredCoding = false;
+            var stats = new Dictionary<string, int>();
             foreach (var file in allFiles)
             {
                 var fi = new FileInfo(file);
@@ -40,27 +43,71 @@ namespace TextExtractor
                 {
                     case ".docx":
                     case ".doc":
+                        AddToDict(stats, FileTypes.Docs);
+                        try
+                        {
+                            paragraphs = GetParagraphs(file);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Encountered an error.");
+                        }
+                        break;
                     case ".pdf":
-                        paragraphs = GetParagraphs(file);
+                        AddToDict(stats, FileTypes.PDFs);
+                        try
+                        {
+                            paragraphs = GetParagraphs(file);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Encountered an error.");
+                        }
                         break;
                     case ".xlsx":
                     case ".xls":
-                        paragraphs = GetParagraphsExcel(file);
+                        AddToDict(stats, FileTypes.Sheets);
+                        try
+                        {
+                            paragraphs = GetParagraphsExcel(file);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Encountered an error.");
+                        }
                         break;
                     case ".pptx":
                     case ".ppt":
-                        paragraphs = GetParagraphsSlides(file);
+                        AddToDict(stats, FileTypes.Slides);
+                        try
+                        {
+                            paragraphs = GetParagraphsSlides(file);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Encountered an error.");
+                        }
                         break;
                     case ".msg":
+                        AddToDict(stats, FileTypes.Emails);
                         if (!registeredCoding)
                         {
                             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                             registeredCoding = true;
                         }
-                        paragraphs = GetParagraphsMsg(file);
+
+                        try
+                        {
+                            paragraphs = GetParagraphsMsg(file);
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Encountered an error.");
+                        }
                         break;
                     default:
                         Log.Error($"{ext} is not supported.");
+                        AddToDict(stats, ext);
                         break;
                 }
                 var d = new Data
@@ -74,6 +121,8 @@ namespace TextExtractor
                 };
                 dataList.Add(d);
             }
+            Log.Information("Finished.");
+            DisplayStatsSummary(stats);
             var json = JsonSerializer.Serialize(dataList, new JsonSerializerOptions
             {
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
@@ -82,6 +131,33 @@ namespace TextExtractor
             });
             html = html.Replace("$data$", json);
             File.WriteAllText(outputPath, html);
+        }
+
+        private static void DisplayStatsSummary(Dictionary<string, int> stats)
+        {
+            Log.Information("=== Summary ===");
+            foreach (var d in stats.OrderBy(e => e.Key))
+            {
+                var msg = "";
+                if (d.Key.StartsWith("."))
+                {
+                    msg = " (unknown type)";
+                }
+
+                Log.Information($"{d.Key}: {d.Value}" + msg);
+            }
+        }
+
+        private static void AddToDict(Dictionary<string, int> dict, string key)
+        {
+            if (dict.ContainsKey(key))
+            {
+                dict[key]++;
+            }
+            else
+            {
+                dict[key] = 1;
+            }
         }
 
         private static Regex lineFeedRegex = new Regex("[\r\n]+", RegexOptions.Compiled);
