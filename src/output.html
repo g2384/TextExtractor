@@ -195,10 +195,24 @@
       }
     }
 
+    function sortNumber(a, b) {
+      return a - b;
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
     function SelectParagraphs(inca, di) {
       if (inca.length == 0) {
         var pi = di.Paragraphs.slice(0, 3);
         pi.push("...");
+        pi = pi.map(e => escapeHtml(e));
         return pi;
       }
 
@@ -219,7 +233,7 @@
         }
       }
       var maxIndex = para.length - 1;
-      var ordered = foundIndex.sort();
+      var ordered = foundIndex.sort(sortNumber);
       var paraIndex = new Set();
       for (var i = 0; i < ordered.length; i++) {
         var startIndex = ordered[i];
@@ -232,7 +246,7 @@
         }
       }
       var paraIndex2 = [...paraIndex];
-      paraIndex2 = paraIndex2.sort();
+      paraIndex2 = paraIndex2.sort(sortNumber);
       var lastIndex = 0;
       var paras = [];
 
@@ -243,6 +257,7 @@
         }
         lastIndex = pi;
         var p = para[pi];
+        p = escapeHtml(p);
         for (var j = 0; j < regs.length; j++) {
           var r = regs[j];
           p = p.replace(r, "<span class='highlight'>$1</span>")
