@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/TextExtractor.sln
     - name: Build
       run: dotnet publish -r win-x64 --self-contained true -p:PublishSingleFile=true -c Release -o ../output
     - name: Test
