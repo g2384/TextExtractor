@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore src/TextExtractor.sln
     - name: Build
-      run: dotnet publish -r win-x64 --self-contained true -p:PublishSingleFile=true -c Release -o ../output
+      run: dotnet publish src/TextExtractor.sln -r win-x64 --self-contained true -p:PublishSingleFile=true -c Release -o ../output
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Upload Artifact
