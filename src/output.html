@@ -6,7 +6,7 @@
       max-width: 1100px;
       margin: 0 auto;
       padding: 10px;
-      background: #eee;
+      background: #F7F7F7;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
@@ -17,9 +17,9 @@
 
     .file {
       display: block;
-      border: 1px solid #9f9f9f;
+      border: 1px solid #dfdfdf;
       background: #fff;
-      padding: 5px;
+      padding: 10px;
       margin-top: 10px;
       border-radius: 5px;
     }
@@ -28,6 +28,7 @@
       display: block;
       border: 1px solid #333;
       padding: 10px 5px;
+      margin-top: 10px;
       box-shadow: #b1b1b1 0px 0px 3px;
     }
 
@@ -42,7 +43,7 @@
       padding-bottom: 16px;
       margin-bottom: 24px;
       min-width: 0;
-      border: 1px solid #9f9f9f;
+      border: 1px solid #dfdfdf;
       border-radius: 5px;
       background-color: #fff;
     }
@@ -59,10 +60,10 @@
       font-size: 14px;
       line-height: 20px;
       vertical-align: middle;
-      border: 1px solid #333;
+      border: 1px solid #a5a5a5;
       border-radius: 6px;
       outline: none;
-      box-shadow: #b1b1b1 0px 0px 3px;
+      box-shadow: #b1b1b1 0px 0px 1px;
     }
 
     .highlight {
@@ -71,11 +72,17 @@
     }
 
     div .blank {
-      background-color: #dcdcdc;
+      background-color: #f7f7f7;
       width: 100%;
       height: 0.8em;
-      color: #dcdcdc;
+      color: #f7f7f7;
       margin: 10px 0px;
+    }
+
+    dd span {
+      display: inline-block;
+      font-size: 0.8em;
+      color: #333;
     }
   </style>
 </head>
@@ -86,23 +93,38 @@
       <h3>Filters:</h3>
       <dl>
         <dt><label for="search_includes">Content Includes:</label></dt>
-        <dd><input id="search_includes" type="text" onchange="filter()" placeholder="must contain"><span> AND</span></dd>
+        <dd>
+          <input id="search_includes" type="text" onchange="filter()" placeholder="must contain">
+          <span>AND</span>
+        </dd>
       </dl>
       <dl>
         <dt><label for="search_excludes">Content Excludes:</label></dt>
-        <dd><input id="search_excludes" type="text" onchange="filter()" placeholder="must not contain"><span> AND</span></dd>
+        <dd>
+          <input id="search_excludes" type="text" onchange="filter()" placeholder="must not contain">
+          <span>AND</span>
+        </dd>
       </dl>
       <dl>
         <dt><label for="search_extension">Extensions:</label></dt>
-        <dd><input id="search_extension" type="text" onchange="filter()" placeholder="pdf docx"><span> OR</span></dd>
+        <dd>
+          <input id="search_extension" type="text" onchange="filter()" placeholder="pdf docx">
+          <span>OR</span>
+        </dd>
       </dl>
       <dl>
         <dt><label for="search_fileNameIncludes">File Name Includes:</label></dt>
-        <dd><input id="search_fileNameIncludes" type="text" onchange="filter()" placeholder="must contain"><span> AND</span></dd>
+        <dd>
+          <input id="search_fileNameIncludes" type="text" onchange="filter()" placeholder="must contain">
+          <span>AND</span>
+        </dd>
       </dl>
       <dl>
         <dt><label for="search_fileNameExcludes">File Name Excludes:</label></dt>
-        <dd><input id="search_fileNameExcludes" type="text" onchange="filter()" placeholder="must not contain"><span> AND</span></dd>
+        <dd>
+          <input id="search_fileNameExcludes" type="text" onchange="filter()" placeholder="must not contain">
+          <span>AND</span>
+        </dd>
       </dl>
     </fieldset>
   </div>
@@ -156,7 +178,7 @@
           var di = allData[fi];
           var div = document.createElement("div");
           div.classList = "file";
-          div.innerHTML = "<h4>" + di.FileName + "<h4>" +
+          div.innerHTML = "<h4>" + di.FileName + "</h4>" +
             "<div>path: <a href='file:///" + di.Directory +
             "' target='_blank'>" + di.Directory + "</a></div>" +
             "<div>Last Modified: " + di.ModifiedTime + "</div>";
