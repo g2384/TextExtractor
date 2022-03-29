@@ -182,11 +182,16 @@
 
       var foundIndex = [];
       var para = di.Paragraphs;
-      for (var i = 0; i < inca.length; i++) {
-        var c = inca[i];
+      var regs = [];
+      for (var j = 0; j < inca.length; j++) {
+        var r = new RegExp("(" + inca[j] + ")", "gi");
+        regs.push(r);
+      }
+      for (var i = 0; i < regs.length; i++) {
+        var c = regs[i];
         for (var k = 0; k < para.length; k++) {
           var p = para[k];
-          if (p.indexOf(c) >= 0) {
+          if (c.test(p)) {
             foundIndex.push(k);
           }
         }
@@ -208,11 +213,7 @@
       paraIndex2 = paraIndex2.sort();
       var lastIndex = 0;
       var paras = [];
-      var regs = [];
-      for (var j = 0; j < inca.length; j++) {
-        var r = new RegExp("(" + inca[j] + ")", "gi");
-        regs.push(r);
-      }
+
       for (var i = 0; i < paraIndex2.length; i++) {
         var pi = paraIndex2[i];
         if (lastIndex + 1 != pi) {

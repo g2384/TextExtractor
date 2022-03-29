@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StartupObject>TextExtractor.Program</StartupObject>
-    <AssemblyName>explorer.exe</AssemblyName>
+    <AssemblyName>explorer</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
