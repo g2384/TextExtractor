@@ -25,7 +25,18 @@ namespace TextExtractor
                 return;
             }
             var path = paths[0];
-            var allFiles = FileHelper.GetAllFiles(path, "*.*").ToArray();
+            var allFiles = new string[0];
+            if (File.Exists(path))
+            {
+                allFiles = new[]
+                {
+                    path
+                };
+            }
+            else
+            {
+                allFiles = FileHelper.GetAllFiles(path, "*.*").ToArray();
+            }
             Log.Information($"Found {allFiles.Length} files.");
             var outputPath = DateTime.Now.ToString("yyyyMMddHHmmss") + "_output.html";
             var html = File.ReadAllText("output.html");
