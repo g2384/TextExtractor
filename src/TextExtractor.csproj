@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="fuse.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="output.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

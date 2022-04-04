@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Text;
+﻿using System.Text;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Text.Encodings.Web;
@@ -46,6 +45,11 @@ namespace TextExtractor
             foreach (var file in allFiles)
             {
                 var fi = new FileInfo(file);
+                if (fi.Name.StartsWith("~$"))
+                {
+                    Log.Information($"Skip ${file}");
+                    continue;
+                }
                 var ext = fi.Extension.ToLowerInvariant();
                 var lastWriteTIme = fi.LastWriteTime;
                 Log.Information($"Processing {fi.Name}");
@@ -128,6 +132,7 @@ namespace TextExtractor
                     FullPath = fi.FullName,
                     Paragraphs = paragraphs,
                     Directory = fi.Directory.FullName,
+                    Size = fi.Length,
                     ModifiedTime = lastWriteTIme.ToString("yyy-MM-dd HH:mm:ss")
                 };
                 dataList.Add(d);
@@ -227,4 +232,3 @@ namespace TextExtractor
         }
     }
 }
-
